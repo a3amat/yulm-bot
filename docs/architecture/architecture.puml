@@ -1,0 +1,34 @@
+@startuml yulm-bot-components
+!theme plain
+title yulm-bot — компонентная диаграмма (PlantUML)
+
+package "Telegram" {
+  actor User
+  component [Bot API] as TGAPI
+}
+
+package "yulm-bot" {
+  component [Gateway\n(polling/webhook)] as GW
+  component [Dialog Router\n(FSM)] as ROUTER
+  component [Business Services] as BIZ
+  component [Integrations Client] as INTEG
+  component [Repositories (DAL)] as REPO
+  component [Config] as CFG
+}
+
+database "PostgreSQL" as PG
+database "Redis" as RD
+cloud "External APIs\n(LLM и др.)" as EXT
+
+User --> TGAPI : сообщения
+TGAPI --> GW : updates
+GW --> ROUTER
+ROUTER --> BIZ
+BIZ --> REPO
+REPO --> PG
+ROUTER --> RD : состояние
+BIZ --> INTEG
+INTEG --> EXT
+CFG ..> GW
+CFG ..> REPO
+@enduml
