@@ -1,0 +1,51 @@
+flowchart LR
+    subgraph Clients
+        WEB[Web App SPA]
+        API_C[Public API clients]
+    end
+    GW[API Gateway / BFF<br/>auth, rate limit, workspace routing]
+    WEB --> GW
+    API_C --> GW
+
+    subgraph Core["Core (modular monolith -> microservices)"]
+        ID[Identity & Tenancy]
+        CT[Content Service]
+        PB[Publishing Orchestrator]
+        BL[Billing Service]
+    end
+    GW --> ID & CT & PB & BL
+
+    BUS[(Event Bus / Queue<br/>Redis Streams MVP)]
+    PB <--> BUS
+    CT <--> BUS
+    BL <--> BUS
+
+    subgraph Workers
+        PW[Publish Worker]
+        MW[Media Worker]
+        AW[AI Adaptation Worker]
+        SCH[Scheduler]
+    end
+    BUS --> PW & MW & AW & SCH
+    SCH -->|job due| BUS
+
+    subgraph IntLayer["Channel Integration Layer"]
+        REG[Adapter Registry]
+        TG{{Telegram}}
+        VK{{VK}}
+        YT{{YouTube}}
+        BLOG{{Blog/WP}}
+        VAULT[Token Vault]
+    end
+    PW --> REG
+    REG --> TG & VK & YT & BLOG
+    PW --> VAULT
+    TG & VK & YT & BLOG --> SOC[(Social Network APIs)]
+
+    PG[(PostgreSQL + RLS)]
+    S3[(S3/MinIO media)]
+    RD[(Redis cache/counters)]
+    ID & CT & PB & BL --> PG
+    CT & MW --> S3
+    PB & BL --> RD
+    AW --> LLM[LLM Providers]

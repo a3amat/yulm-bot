@@ -1,0 +1,18 @@
+flowchart TB
+    subgraph Edge["Edge"]
+        LB[Load Balancer / Caddy TLS]
+    end
+    subgraph Host["Docker Compose MVP (single VM)"]
+        APIC[api container: gateway+core modules]
+        WORKER[worker container: publish+ai+scheduler]
+        MEDIA[media-worker container: ffmpeg/sharp]
+        PG[(postgres)]
+        REDIS[(redis)]
+        MINIO[(minio)]
+    end
+    USER((Users)) --> LB --> APIC
+    WORKER --> REDIS & PG & MINIO
+    MEDIA --> MINIO
+    APIC --> PG & REDIS
+    WORKER --> EXT[SNS APIs + LLM + Stripe webhooks]
+    CI[GitHub Actions: test build deploy] -.-> Host

@@ -1,0 +1,14 @@
+erDiagram
+    USERS ||--o{ WORKSPACE_MEMBERS : joins
+    WORKSPACES ||--o{ WORKSPACE_MEMBERS : has
+    WORKSPACES ||--o{ ACCOUNT_CONNECTIONS : owns
+    WORKSPACES ||--o{ MATERIALS : owns
+    MATERIALS ||--|{ MATERIAL_VERSIONS : "has (append-only)"
+    MATERIAL_VERSIONS ||--o{ MEDIA_ASSETS : references
+    MATERIAL_VERSIONS ||--o{ PUBLICATION_JOBS : published_as
+    PUBLICATION_JOBS ||--|{ PUBLICATION_ATTEMPTS : fans_out_to
+    ACCOUNT_CONNECTIONS ||--o{ PUBLICATION_ATTEMPTS : targets
+    WORKSPACES ||--o| SUBSCRIPTIONS : billed_by
+    PLANS ||--o{ SUBSCRIPTIONS : defines
+    WORKSPACES ||--o{ USAGE_COUNTERS : accrues
+    WORKSPACES ||--o{ AUDIT_EVENTS : logs

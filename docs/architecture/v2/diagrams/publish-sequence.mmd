@@ -1,0 +1,35 @@
+sequenceDiagram
+    actor U as User UI
+    participant GW as Gateway
+    participant PB as Publishing
+    participant BL as Billing
+    participant Q as Queue
+    participant W as Publish Worker
+    participant V as Token Vault
+    participant AD as Channel Adapter
+    participant SN as Social Network
+
+    U->>GW: POST /publications (version -> channels)
+    GW->>PB: create job
+    PB->>BL: checkEntitlements
+    BL-->>PB: ok
+    PB-->>U: 202 job_id + SSE status stream
+    PB->>Q: enqueue attempts per channel
+    W->>Q: take attempt
+    W->>V: get ephemeral credentials
+    V-->>W: token
+    W->>AD: publish(payload, idempotencyKey)
+    AD->>SN: API call
+    alt success
+        SN-->>AD: post id/url
+        AD-->>W: succeeded
+        W->>PB: attempt.succeeded -> aggregate job
+    else transient error
+        SN-->>AD: 429 / 5xx
+        AD-->>W: retryable
+        W->>Q: requeue with backoff
+    else permanent error
+        SN-->>AD: 401 revoked
+        AD-->>W: failed
+        W->>PB: attempt.failed, connection=reauth_required
+    end
